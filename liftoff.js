@@ -277,7 +277,7 @@
     thanks.hidden = false; thanks.focus();
   });
 
-  /* ---------- live gateway status (same-origin, proxied by vercel.json) ---------- */
+  /* ---------- live gateway status (direct to the gateway, credentialed CORS) ---------- */
   const gw = { status: null, health: null, samples: [] };
   const $ = id => document.getElementById(id);
   const timeET = d => { try { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET'; } catch (_) { return d.toLocaleTimeString(); } };
@@ -285,7 +285,7 @@
     const ctrl = 'AbortController' in window ? new AbortController() : null;
     const t = ctrl ? setTimeout(() => ctrl.abort(), 6000) : 0;
     const t0 = performance.now();
-    return fetch(path, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    return fetch(path, { cache: 'no-store', credentials: 'include', signal: ctrl ? ctrl.signal : undefined })
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(j => { clearTimeout(t); return { json: j, ms: performance.now() - t0 }; })
       .catch(err => { clearTimeout(t); throw err; });
@@ -349,7 +349,7 @@
     gw.health = null; gw.samples.push(null);
     if (read) read.textContent = '/api/health did not answer from this page';
   }).then(() => { if (gw.samples.length > 24) gw.samples.shift(); drawSpark(); paintMeta(); });
-  const pollStatus = () => getJSON('https://api.artemisai-bycutlineindustries.studio/v1/status').then(r => { gw.status = r.json; }).catch(() => { gw.status = null; }).then(() => { paintMeta(); paintCore(); });
+  const pollStatus = () => getJSON('https://api.artemisai-bycutlineindustries.studio/api/status').then(r => { gw.status = r.json; }).catch(() => { gw.status = null; }).then(() => { paintMeta(); paintCore(); });
   paintCore(); pollStatus(); pollHealth();
   let gwVisible = false;
   const gwCard = spark && spark.closest('.card');
