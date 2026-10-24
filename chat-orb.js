@@ -57,7 +57,8 @@
 
   // Settings: model status + account, read-aloud voice, voice mode note.
   const wsTop = header && header.querySelector('.workspace-top');
-  if (wsTop) section(settings, 'Model & account').append(wsTop);
+  const wsModels = header && header.querySelector('.workspace-models');
+  if (wsTop) { const sec = section(settings, 'Model & account'); sec.append(wsTop); if (wsModels) sec.append(wsModels); }
   const voiceSec = section(settings, 'Voice');
   const voiceBar = composer.querySelector('.workspace-voice');
   if (voiceBar) voiceSec.append(voiceBar);

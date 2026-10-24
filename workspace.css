@@ -95,5 +95,7 @@ a.brand { text-decoration: none; color: inherit; }
 .shell-foot { padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
 .shell-foot a { color: inherit; }
 
-.workspace-models { padding-block: 4px 0; }
+.workspace-models { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); padding-block: 8px; flex-wrap: wrap; }
+.workspace-models[hidden] { display: none; }
+.workspace-models select { max-width: 240px; min-width: 0; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px; font: inherit; }
 .workspace-model-note { font-size: 11px; color: var(--muted); }

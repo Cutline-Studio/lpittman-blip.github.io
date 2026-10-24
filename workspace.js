@@ -16,7 +16,7 @@
   authButton.className = 'workspace-account';
   const top = node('div', 'workspace-top'); top.append(model, status, authButton);
   // Model choice. Artemis (the labelled bootstrap) stays the default; other models appear only when the server can serve them.
-  const modelRow = node('div', 'workspace-branches workspace-models'), modelPicker = node('select'), modelNote = node('span', 'workspace-model-note');
+  const modelRow = node('div', 'workspace-models'), modelPicker = node('select'), modelNote = node('span', 'workspace-model-note');
   modelPicker.setAttribute('aria-label', 'Model'); modelRow.append(node('span', '', 'Model'), modelPicker, modelNote); modelRow.hidden = true;
   let chosenModel = 'artemis', statusInfo = null;
   try { chosenModel = localStorage.getItem('artemis.model') || 'artemis'; } catch {}
