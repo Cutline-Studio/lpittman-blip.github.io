@@ -94,3 +94,6 @@
 a.brand { text-decoration: none; color: inherit; }
 .shell-foot { padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
 .shell-foot a { color: inherit; }
+
+.workspace-models { padding-block: 4px 0; }
+.workspace-model-note { font-size: 11px; color: var(--muted); }

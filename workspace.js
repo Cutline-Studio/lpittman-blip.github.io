@@ -15,7 +15,30 @@
   const authButton = button('Sign in', () => user ? accountDialog.showModal() : openAuth());
   authButton.className = 'workspace-account';
   const top = node('div', 'workspace-top'); top.append(model, status, authButton);
-  const header = node('div', 'workspace-header'); header.append(top); convo.prepend(header);
+  // Model choice. Artemis (the labelled bootstrap) stays the default; other models appear only when the server can serve them.
+  const modelRow = node('div', 'workspace-branches workspace-models'), modelPicker = node('select'), modelNote = node('span', 'workspace-model-note');
+  modelPicker.setAttribute('aria-label', 'Model'); modelRow.append(node('span', '', 'Model'), modelPicker, modelNote); modelRow.hidden = true;
+  let chosenModel = 'artemis', statusInfo = null;
+  try { chosenModel = localStorage.getItem('artemis.model') || 'artemis'; } catch {}
+  function showModelStatus() {
+    if (!statusInfo) return;
+    const extra = chosenModel !== 'artemis' && (statusInfo.added_models || {})[chosenModel];
+    const info = extra || statusInfo;
+    model.textContent = extra ? (modelPicker.selectedOptions[0]?.textContent || chosenModel) : (statusInfo.model || 'Artemis');
+    status.textContent = info.serving ? 'Model connected' : info.status === 'unavailable' ? 'Model unavailable' : 'Model not ready';
+    status.dataset.state = info.serving ? 'available' : 'unavailable';
+    modelNote.textContent = extra ? (extra.quality ? 'Early ' + extra.quality + ' — answers as code, ~20–60 s' : '') : '';
+  }
+  async function loadModels() {
+    try {
+      const list = (await api('/api/models')).models.filter(m => m.available);
+      modelPicker.replaceChildren(...list.map(m => { const o = node('option', '', m.id === 'artemis' ? 'Artemis (default)' : m.display); o.value = m.id; o.title = m.description || ''; return o; }));
+      if (!list.some(m => m.id === chosenModel)) chosenModel = 'artemis';
+      modelPicker.value = chosenModel; modelRow.hidden = list.length < 2; showModelStatus();
+    } catch { modelRow.hidden = true; chosenModel = 'artemis'; }
+  }
+  modelPicker.addEventListener('change', () => { chosenModel = modelPicker.value; try { localStorage.setItem('artemis.model', chosenModel); } catch {} showModelStatus(); });
+  const header = node('div', 'workspace-header'); header.append(top, modelRow); convo.prepend(header);
   const mobile = node('div', 'session-mobile'), picker = node('select'); picker.setAttribute('aria-label', 'Conversation');
   picker.addEventListener('change', () => openConversation(picker.value));
   const mobileNew = button('＋ New', newConversation, 'mobile-new'); mobile.append(picker, mobileNew); header.append(mobile);
@@ -202,7 +225,7 @@
     }
     const cid = active.id, saved = pending[cid];
     if (saved && JSON.stringify(saved.text) !== JSON.stringify(fields.text)) { showNotice('An earlier request has uncertain delivery. Retry that request before sending different input.', button('Retry delivery', () => submit(saved))); return; }
-    const payload = saved || { ...fields, head_id: head, idempotency_key: crypto.randomUUID() };
+    const payload = saved || { ...fields, head_id: head, idempotency_key: crypto.randomUUID(), ...(chosenModel !== 'artemis' ? { model: chosenModel } : {}) };
     pending[cid] = payload; saveDrafts(); flight = { delivering: true }; controls(); showNotice('Connecting…');
     try {
       let result;
@@ -326,7 +349,8 @@
   const requestedPanel = new URLSearchParams(location.search).get('panel');
   if (requestedPanel && Object.prototype.hasOwnProperty.call(panels, requestedPanel)) selectPanel(requestedPanel);
   render();
-  api('/api/status').then(info => { model.textContent = info.model || 'Artemis'; status.textContent = info.serving ? 'Model connected' : info.status === 'unavailable' ? 'Model unavailable' : 'Model not ready'; status.dataset.state = info.serving ? 'available' : 'unavailable'; status.title = 'Availability does not certify answer quality.'; }).catch(() => { status.textContent = 'Connection unavailable'; });
+  api('/api/status').then(info => { statusInfo = info; status.title = 'Availability does not certify answer quality.'; showModelStatus(); }).catch(() => { status.textContent = 'Connection unavailable'; });
+  loadModels();
   api('/api/me').then(async response => { user = response.user; if (user) await signedIn(); else { accountState(); render(); } }).catch(() => showNotice('Login service is unavailable. Please try again.'));
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 })();
