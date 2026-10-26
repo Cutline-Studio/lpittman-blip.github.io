@@ -534,7 +534,7 @@
     const lastMsg = [...box.querySelectorAll(':scope > .msg')].pop(); if (lastMsg) lastMsg.classList.add('orb-latest');
   };
   new MutationObserver(decorate).observe(box, { childList: true });
-  form.addEventListener('submit', () => { if (!input.value.trim() || input.disabled || busy) return; pendingTyping = true; setTimeout(decorate, 0); }, true);
+  form.addEventListener('submit', () => { if (!input.value.trim() || input.disabled || busy || !/Account/.test(document.querySelector('.workspace-account')?.textContent || '')) return; pendingTyping = true; setTimeout(decorate, 0); }, true);
   const clearPending = () => { pendingTyping = false; if (pendingEl) { pendingEl.remove(); pendingEl = null; } };
   new MutationObserver(() => { if (form.getAttribute('aria-busy') !== 'true') setTimeout(() => { if (form.getAttribute('aria-busy') !== 'true' && !box.querySelector('.msg.sys.orb-typing:not(.orb-pending)')) clearPending(); }, 900); }).observe(form, { attributes: true, attributeFilter: ['aria-busy'] });
   stop.addEventListener('click', () => setTimeout(() => { if (!busy) clearPending(); }, 300));
