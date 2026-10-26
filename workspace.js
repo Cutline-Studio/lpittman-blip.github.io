@@ -101,7 +101,7 @@
   }
   input.addEventListener('input', () => { if (active) { drafts[active.id] = input.value.slice(0, 8000); saveDrafts(); } input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 180) + 'px'; });
   function controls() {
-    const busy = !!flight; input.disabled = !user || busy; send.disabled = !user; send.type = busy ? 'button' : 'submit';
+    const busy = !!flight; input.disabled = busy; send.disabled = false; send.type = busy ? 'button' : 'submit';
     send.setAttribute('aria-label', busy ? 'Stop' : 'Send'); form.setAttribute('aria-busy', String(busy));
     if (busy) send.replaceChildren(node('span', '', '■')); else send.innerHTML = sendIcon;
     for (const element of [newButton, mobileNew, picker, branchPicker, search, archiveToggle]) element.disabled = busy || !user;
@@ -126,7 +126,7 @@
     listNote.textContent = user ? (conversations.length ? 'Conversations are saved to your account.' : 'No matching conversations.') : 'Sign in for private conversations across devices.'; controls();
   }
   async function newConversation() {
-    if (!user) { openAuth(); return; } if (flight) return;
+    if (!user) { try { sessionStorage.setItem('artemis.preauth', fields.text || ''); } catch {} showNotice('Sign in or create an account to send. Your message will be kept.'); openAuth(); return; } if (flight) return;
     if (active && !active.messages.length) { input.focus(); return; }
     await action(async () => { const conversation = await api('/api/conversations', { method: 'POST', body: {} }); showNotice(''); await refreshList(); await openConversation(conversation.id); });
   }
@@ -313,6 +313,8 @@
     try { const cache = JSON.parse(localStorage.getItem('artemis.drafts.' + user.id) || '{}'); drafts = cache.drafts || {}; pending = cache.pending || {}; } catch {}
     await refreshList();
     if (conversations.length) await openConversation(conversations[0].id); else { active = null; render(); }
+    let preauth = ''; try { preauth = sessionStorage.getItem('artemis.preauth') || ''; sessionStorage.removeItem('artemis.preauth'); } catch {}
+    if (preauth) { active = null; head = null; render(); input.value = preauth; input.dispatchEvent(new Event('input', { bubbles: true })); input.focus(); }
     authButton.textContent = 'Account'; showNotice('Signed in. Conversations are saved to your account.');
   }
   const accountDialog = node('dialog', 'workspace-dialog'), accountTitle = node('h2', '', 'Your account'); accountTitle.id = 'account-title'; accountDialog.setAttribute('aria-labelledby', accountTitle.id);
